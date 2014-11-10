@@ -23,5 +23,6 @@
         <provider android:name="FeedsProvider"
                   android:authorities="ru.ifmo.md.lesson5.Feeds">
         </provider>
+        <service android:name="ru.ifmo.md.lesson5.FeedsFetchService" />
     </application>
 </manifest>

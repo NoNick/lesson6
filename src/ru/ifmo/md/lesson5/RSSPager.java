@@ -78,7 +78,12 @@ public class RSSPager extends FragmentActivity {
         }
         for (int i = 0; i < feeds.size(); i++) {
             feedAdapter.add(feeds.get(i), feedsNames.get(i));
+            Intent intent = new Intent(this, FeedsFetchService.class);
+            intent.putExtra("url", feeds.get(i));
+            intent.putExtra("force", false);
+            startService(intent);
         }
+
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(feedAdapter);
         mViewPager.setOffscreenPageLimit(Integer.MAX_VALUE >> 1);
@@ -144,6 +149,12 @@ public class RSSPager extends FragmentActivity {
         }
         else {
             dbWriteFeed(link, name);
+            feeds.add(link);
+            feedsNames.add(name);
+            Intent intent = new Intent(this, FeedsFetchService.class);
+            intent.putExtra("url", link);
+            intent.putExtra("force", false);
+            startService(intent);
         }
     }
 
@@ -151,7 +162,8 @@ public class RSSPager extends FragmentActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.refresh_feed:
-                feedAdapter.refresh(currPage);
+                Intent intent = new Intent(this, FeedsFetchService.class);
+                startService(intent.putExtra("url", feeds.get(currPage)).putExtra("force", true));
                 return true;
             case R.id.add_feed:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -175,10 +187,11 @@ public class RSSPager extends FragmentActivity {
                     }
                 });
                 builder.show();
-
                 return true;
             case R.id.del_feed:
                 dbDeleteFeed(feedAdapter.feeds.get(currPage));
+                feeds.remove(currPage);
+                feedsNames.remove(currPage);
                 feedAdapter.del(currPage);
                 return true;
             default:
@@ -214,10 +227,6 @@ public class RSSPager extends FragmentActivity {
                 return true;
             }
             return false;
-        }
-
-        public void refresh(int pos) {
-            fragments.get(pos).refresh();
         }
 
         public void del(int pos) {
@@ -264,25 +273,18 @@ public class RSSPager extends FragmentActivity {
         }
     }
 
-    public static class FeedMenu extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+    public static class FeedMenu extends Fragment {
 
         public static final String ARG_URL = "RSS_url", ARG_ONLINE = "RSS_online";
         String url;
-        private boolean online;
         ListView lv;
-        FeedCursorAdapter mAdapter;
+        SimpleCursorAdapter mAdapter;
         View rootView;
         Context mainContext;
         Cursor c;
 
         public FeedMenu(Context c) {
             mainContext = c;
-        }
-
-        public void refresh() {
-            if (online) {
-                getLoaderManager().initLoader(1, null, this).forceLoad();
-            }
         }
 
         @Override
@@ -296,20 +298,19 @@ public class RSSPager extends FragmentActivity {
 
             String[] arg = {url};
             c = mainContext.getContentResolver().query(FeedsProvider.CONTENT_URI, null, "name=?", arg, null);
-            mAdapter = new FeedCursorAdapter(mainContext, R.layout.list_item, c, 0);
+            mAdapter = new SimpleCursorAdapter(mainContext, R.layout.list_item, c,
+                                  new String[]{FeedsProvider.TITLE, FeedsProvider.DESC, FeedsProvider.LINK},
+                                  new int[]{R.id.text1, R.id.text2, R.id.linkField});
             lv.setAdapter(mAdapter);
             lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     Intent intent = new Intent(view.getContext(), WebActivity.class);
-                    intent.putExtra(WebActivity.REQUEST_URL, (String)((TwoLineListItem) view).getText1().getTag());
-                    intent.putExtra(WebActivity.REQUEST_TITLE, ((TwoLineListItem) view).getText1().getText().toString());
+                    intent.putExtra(WebActivity.REQUEST_URL, ((TextView)view.findViewById(R.id.linkField)).getText());
+                    intent.putExtra(WebActivity.REQUEST_TITLE, ((TextView)view.findViewById(R.id.text1)).getText());
                     startActivity(intent);
                 }
             });
-
-            if (c.getCount() == 0)
-                refresh();
 
             return rootView;
         }
@@ -317,32 +318,7 @@ public class RSSPager extends FragmentActivity {
         @Override
         public void onDestroy() {
             super.onDestroy();
-
             c.close();
         }
-
-        @Override
-        public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-            LinearLayout progressBarLayout = (LinearLayout) rootView.findViewById(R.id.linlaHeaderProgress);
-            String[] arg = {url};
-            c = mainContext.getContentResolver().query(FeedsProvider.CONTENT_URI, null, "name=?", arg, null);
-            if (progressBarLayout != null && c.getCount() == 0)
-                progressBarLayout.setVisibility(View.VISIBLE);
-            return new FetchRSS(url, mainContext);
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> voidLoader, Cursor c) {
-            LinearLayout progressBarLayout = (LinearLayout) rootView.findViewById(R.id.linlaHeaderProgress);
-            if (progressBarLayout != null)
-                progressBarLayout.setVisibility(View.GONE);
-            this.c = c;
-            mAdapter = new FeedCursorAdapter(mainContext, R.layout.list_item, this.c, 0);
-            lv.setAdapter(mAdapter);
-            mAdapter.notifyDataSetChanged();
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> voidLoader) {}
     }
 }
