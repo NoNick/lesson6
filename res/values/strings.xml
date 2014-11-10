@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RSS reader</string>
+    <string name="notOnline">No internet connection</string>
+    <string name="newFeedTitle">Add new feed</string>
+    <string name="noNewFeed">Unable to create new feed</string>
+</resources>
