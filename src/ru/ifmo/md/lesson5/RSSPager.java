@@ -11,7 +11,6 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.*;
-import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.*;
 import android.util.Log;
@@ -32,12 +31,10 @@ public class RSSPager extends FragmentActivity {
     private static boolean online;
     ArrayList<String> defaultFeeds = new ArrayList<String>(Arrays.asList("http://stackoverflow.com/feeds/tag/android",
                                            "http://feeds.bbci.co.uk/news/rss.xml",
-                                           "http://echo.msk.ru/interview/rss-fulltext.xml",
-                                           "http://bash.im/rss/")), feeds = new ArrayList<String>();
+                                           "http://echo.msk.ru/interview/rss-fulltext.xml")), feeds = new ArrayList<String>();
     ArrayList<String> defaultFeedsNames = new ArrayList<String>(Arrays.asList("StackOverflow/Android",
             "BBC News",
-            "Эхо Москвы",
-            "Bash")), feedsNames = new ArrayList<String>();
+            "Эхо Москвы")), feedsNames = new ArrayList<String>();
     private int currPage;
 
     class NewFeedListener implements DialogInterface.OnClickListener {
