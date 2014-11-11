@@ -277,7 +277,7 @@ public class RSSPager extends FragmentActivity {
         public static final String ARG_URL = "RSS_url", ARG_ONLINE = "RSS_online";
         String url;
         ListView lv;
-        SimpleCursorAdapter mAdapter;
+        HtmlCursorAdapter mAdapter;
         View rootView;
         Context mainContext;
 
@@ -293,10 +293,8 @@ public class RSSPager extends FragmentActivity {
             Bundle args = getArguments();
             url = args.getString(ARG_URL);
             online = args.getBoolean(ARG_ONLINE);
-
             getLoaderManager().initLoader(0, null, this);
-            String[] arg = {url};
-            mAdapter = new SimpleCursorAdapter(mainContext, R.layout.list_item, null,
+            mAdapter = new HtmlCursorAdapter(mainContext, R.layout.list_item, null,
                                   new String[]{FeedsProvider.TITLE, FeedsProvider.DESC, FeedsProvider.LINK},
                                   new int[]{R.id.text1, R.id.text2, R.id.linkField});
             lv.setAdapter(mAdapter);
@@ -304,8 +302,8 @@ public class RSSPager extends FragmentActivity {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                     Intent intent = new Intent(view.getContext(), WebActivity.class);
-                    intent.putExtra(WebActivity.REQUEST_URL, ((TextView)view.findViewById(R.id.linkField)).getText());
-                    intent.putExtra(WebActivity.REQUEST_TITLE, ((TextView)view.findViewById(R.id.text1)).getText());
+                    intent.putExtra(WebActivity.REQUEST_URL, ((TextView)view.findViewById(R.id.linkField)).getText().toString());
+                    intent.putExtra(WebActivity.REQUEST_TITLE, ((TextView)view.findViewById(R.id.text1)).getText().toString());
                     startActivity(intent);
                 }
             });
