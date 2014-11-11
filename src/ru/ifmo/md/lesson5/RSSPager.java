@@ -11,6 +11,8 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.*;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.*;
 import android.util.Log;
@@ -270,7 +272,7 @@ public class RSSPager extends FragmentActivity {
         }
     }
 
-    public static class FeedMenu extends Fragment {
+    public static class FeedMenu extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
         public static final String ARG_URL = "RSS_url", ARG_ONLINE = "RSS_online";
         String url;
@@ -278,7 +280,6 @@ public class RSSPager extends FragmentActivity {
         SimpleCursorAdapter mAdapter;
         View rootView;
         Context mainContext;
-        Cursor c;
 
         public FeedMenu(Context c) {
             mainContext = c;
@@ -293,9 +294,9 @@ public class RSSPager extends FragmentActivity {
             url = args.getString(ARG_URL);
             online = args.getBoolean(ARG_ONLINE);
 
+            getLoaderManager().initLoader(0, null, this);
             String[] arg = {url};
-            c = mainContext.getContentResolver().query(FeedsProvider.CONTENT_URI, null, "name=?", arg, null);
-            mAdapter = new SimpleCursorAdapter(mainContext, R.layout.list_item, c,
+            mAdapter = new SimpleCursorAdapter(mainContext, R.layout.list_item, null,
                                   new String[]{FeedsProvider.TITLE, FeedsProvider.DESC, FeedsProvider.LINK},
                                   new int[]{R.id.text1, R.id.text2, R.id.linkField});
             lv.setAdapter(mAdapter);
@@ -315,7 +316,22 @@ public class RSSPager extends FragmentActivity {
         @Override
         public void onDestroy() {
             super.onDestroy();
-            c.close();
+        }
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            String[] projection = { FeedsProvider._ID, FeedsProvider.NAME, FeedsProvider.LINK, FeedsProvider.DESC, FeedsProvider.TITLE};
+            return new CursorLoader(mainContext, FeedsProvider.CONTENT_URI, projection, "name=?", new String[] { url }, null);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            mAdapter.swapCursor(data);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> cursorLoader) {
+            mAdapter.swapCursor(null);
         }
     }
 }

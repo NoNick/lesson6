@@ -94,6 +94,7 @@ public class FeedsFetchService extends IntentService implements LoaderManager.Lo
                 text = "";
             }
             if (values != null && qName.equals("link")) {
+                text = "";
                 values.put(FeedsProvider.LINK, attrs.getValue("href"));
             }
         }
